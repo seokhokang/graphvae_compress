@@ -197,8 +197,8 @@ class Model(object):
         if load_path is not None: self.saver.restore(self.sess, load_path)   
 
         ## tranining
-        max_epoch=30
-        chunk_size=300000
+        max_epoch = 10
+        chunk_size = 300000
         print('::: training')
         eval_log = np.zeros(max_epoch)
         for epoch in range(max_epoch):
