@@ -1,6 +1,7 @@
 import numpy as np
 from rdkit import Chem
 
+
 def to_onehot(val, cat):
 
     vec = np.zeros(len(cat))
@@ -12,6 +13,7 @@ def to_onehot(val, cat):
 
     return vec
 
+
 def atomFeatures(atom, atom_list):
 
     v1 = to_onehot(atom.GetFormalCharge(), [-1, 1, 2, 3, 0])[:4]
@@ -20,16 +22,15 @@ def atomFeatures(atom, atom_list):
     
     return np.concatenate([v1, v2, v3], axis=0)
 
-def bondFeatures(bonds, bond_list):
 
-    e1 = np.zeros(len(bond_list))
-    if len(bonds)==1:
-        e1 = to_onehot(str(bonds[0].GetBondType()), bond_list)
+def bondFeatures(bond, bond_list):
+
+    e1 = to_onehot(str(bond.GetBondType()), bond_list)
 
     return e1
  
  
-def _vec_to_mol(dv, de, atom_list, edge_split, train=False):
+def _vec_to_mol(dv, de, atom_list, bpatt_dim, train=False):
     
     def to_dummy(vec, ax=1, thr=1):  return np.concatenate([vec, thr - np.sum(vec, ax, keepdims=True)], ax)
   
@@ -60,7 +61,7 @@ def _vec_to_mol(dv, de, atom_list, edge_split, train=False):
     node_exp = node_to_val(np.argmax(to_dummy(dv[:,4:7], 1), 1), [1, 2, 3])  
 
     edge_bond = np.argmax(to_dummy(de[:,:,:len(bond_ref)], 2), 2)
-    edge_patt = [edge_to_val(np.argmax(to_dummy(de[:,:,len(bond_ref)+sum(edge_split[:i]):len(bond_ref)+sum(edge_split[:i+1])], 2), 2), range(1, edge_split[i]+1) ) for i in range(len(edge_split))]
+    edge_patt = [edge_to_val(np.argmax(to_dummy(de[:,:,len(bond_ref)+sum(bpatt_dim[:i]):len(bond_ref)+sum(bpatt_dim[:i+1])], 2), 2), range(1, bpatt_dim[i]+1) ) for i in range(len(bpatt_dim))]
 
     selid = np.where(node_atom<len(atom_list))[0]
     

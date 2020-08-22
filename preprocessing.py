@@ -1,7 +1,7 @@
 import numpy as np
 import pickle as pkl
 import sys, sparse
-from util import atomFeatures, bondFeatures, _vec_to_mol
+from util import atomFeatures, bondFeatures#, _vec_to_mol
 from rdkit import Chem
 from rdkit.Chem import AllChem, Descriptors
 
@@ -38,9 +38,13 @@ DV = sparse.COO.from_numpy(np.empty(shape=(0, n_max, dim_node), dtype=bool))
 DE = sparse.COO.from_numpy(np.empty(shape=(0, n_max, n_max, dim_edge), dtype=bool)) 
 DY = []
 Dsmi = []
+
+dv_list = []
+de_list = []
+
 for i, smi in enumerate(smisuppl):
 
-    if i % 1000 == 0: print(i, len(Dsmi), current_max, flush=True)
+    if i % 10000 == 0: print(i, len(Dsmi), current_max, flush=True)
 
     smi = Chem.MolToSmiles(Chem.MolFromSmiles(smi), isomericSmiles=False)
     mol = Chem.MolFromSmiles(smi)  
@@ -57,22 +61,23 @@ for i, smi in enumerate(smisuppl):
     # edge pattern search
     del_ids = []
     case_list = []
-    for j in range(len(bpatt_list)):
-        for aids in mol.GetSubstructMatches(bpatt_list[j]):
+    for m in range(len(bpatt_list)):
+        for aids in mol.GetSubstructMatches(bpatt_list[m]):
             if np.sum([(aid in del_ids) for aid in aids]) == 0 and np.sum(np.abs([mol.GetAtomWithIdx(aid).GetFormalCharge() for aid in aids])) == 0:
                 del_ids = del_ids + list(aids[1:-1])
-                case_list.append([j, np.min([aids[0], aids[-1]]), np.max([aids[0], aids[-1]])])
+                case_list.append([m, np.min([aids[0], aids[-1]]), np.max([aids[0], aids[-1]])])
 
     # edge DE
     edge = np.zeros((n_atom, n_atom, dim_edge), dtype=bool)
     for j in range(n_atom - 1):
         for k in range(j + 1, n_atom):
-            molpath = Chem.GetShortestPath(mol, j, k)
-            bonds = [mol.GetBondBetweenAtoms(molpath[bid], molpath[bid + 1]) for bid in range(len(molpath) - 1)]
-            edge[j, k, :] = np.concatenate([bondFeatures(bonds, bond_list), np.zeros(np.sum(bpatt_dim))], 0)
+            bond = mol.GetBondBetweenAtoms(j, k)
+            if bond is not None:
+                edge[j, k, :] = np.concatenate([bondFeatures(bond, bond_list), np.zeros(np.sum(bpatt_dim))], 0)
+                
             for m in range(len(bpatt_list)):
                 if [m, j, k] in case_list:
-                    assert case_list.count([m, j, k]) <= bpatt_dim[m]                        
+                    #assert case_list.count([m, j, k]) <= bpatt_dim[m]                        
                     edge[j, k, int(len(bond_list) + np.sum(bpatt_dim[:m]) + case_list.count([m, j, k]) - 1)] = 1
 
             edge[k, j, :] = edge[j, k, :]
@@ -82,7 +87,7 @@ for i, smi in enumerate(smisuppl):
     edge = np.delete(edge, del_ids, 0)
     edge = np.delete(edge, del_ids, 1)
     
-    assert node.shape[0] <= n_max        
+    #assert node.shape[0] <= n_max        
     if current_max < node.shape[0]: current_max = node.shape[0]
         
     node = np.pad(node, ((0, n_max - node.shape[0]), (0, 0)))
@@ -91,11 +96,20 @@ for i, smi in enumerate(smisuppl):
     # property DY
     property = [Descriptors.ExactMolWt(mol), Descriptors.MolLogP(mol)]
 
+    # validity check: smi vs. _vec_to_mol(node, edge, atom_list, bpatt_dim)
+
     # append
-    DV = np.concatenate([DV, sparse.COO.from_numpy([node])], 0)
-    DE = np.concatenate([DE, sparse.COO.from_numpy([edge])], 0)
+    dv_list.append(node)
+    de_list.append(edge)
     DY.append(property)
     Dsmi.append(smi)
+    
+    if i % 10000 == 0 or i == len(smisuppl)-1:
+        DV = np.concatenate([DV, sparse.COO.from_numpy(dv_list)], 0)
+        DE = np.concatenate([DE, sparse.COO.from_numpy(de_list)], 0)
+        dv_list = []
+        de_list = []
+
 
 # np array    
 DY = np.asarray(DY)
