@@ -32,36 +32,23 @@ def bondFeatures(bond, bond_list):
  
 def _vec_to_mol(dv, de, atom_list, bpatt_dim, train=False):
     
-    def to_dummy(vec, ax=1, thr=1):  return np.concatenate([vec, thr - np.sum(vec, ax, keepdims=True)], ax)
+    def to_dummy(vec, ax=1, thr=1):
+    
+        return np.concatenate([vec, thr - np.sum(vec, ax, keepdims=True)], ax)
   
-    def node_to_val(vec, cat):  
-        out = np.zeros(np.shape(vec), dtype=int)
-        for i, v in enumerate(vec):
-            for j, c in enumerate(cat): 
-                if v == j:
-                    out[i]=c
-                
-        return out
+    def cat_to_val(vec, cat):
+    
+        cat.append(0) 
+        return np.array(cat)[vec]
 
-    def edge_to_val(vec, cat):  
-        out = np.zeros(np.shape(vec), dtype=int)
-        for i in range(len(dv)-1):
-            for j in range(i, len(dv)):
-                for k, c in enumerate(cat): 
-                    if vec[i,j] == k:
-                        out[i,j] = c
-                        out[j,i] = c
-                
-        return out
-        
     bond_ref = [Chem.BondType.SINGLE, Chem.BondType.DOUBLE, Chem.BondType.TRIPLE]
     
     node_atom = np.argmax(to_dummy(dv[:,-len(atom_list):], 1), 1)
-    node_charge = node_to_val(np.argmax(to_dummy(dv[:,:4], 1), 1), [-1, 1, 2, 3])
-    node_exp = node_to_val(np.argmax(to_dummy(dv[:,4:7], 1), 1), [1, 2, 3])  
+    node_charge = cat_to_val(np.argmax(to_dummy(dv[:,:4], 1), 1), [-1, 1, 2, 3])
+    node_exp = cat_to_val(np.argmax(to_dummy(dv[:,4:7], 1), 1), [1, 2, 3])  
 
     edge_bond = np.argmax(to_dummy(de[:,:,:len(bond_ref)], 2), 2)
-    edge_patt = [edge_to_val(np.argmax(to_dummy(de[:,:,len(bond_ref)+sum(bpatt_dim[:i]):len(bond_ref)+sum(bpatt_dim[:i+1])], 2), 2), range(1, bpatt_dim[i]+1) ) for i in range(len(bpatt_dim))]
+    edge_patt = [cat_to_val(np.argmax(to_dummy(de[:,:,len(bond_ref)+sum(bpatt_dim[:i]):len(bond_ref)+sum(bpatt_dim[:i+1])], 2), 2), list(range(1, bpatt_dim[i]+1)) ) for i in range(len(bpatt_dim))]
 
     selid = np.where(node_atom<len(atom_list))[0]
     
