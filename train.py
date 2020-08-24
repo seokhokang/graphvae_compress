@@ -5,8 +5,6 @@ from GVAE import Model
 import sys
 
 
-
-
 data_path = './guacamol_graph.pkl'
 save_path = './guacamol_model.ckpt'
 
@@ -22,8 +20,6 @@ dim_y = DY.shape[1]
 atom_list = ['B','C','N','O','F','Si','P','S','Cl','Se','Br','I']
 bond_list = ['SINGLE', 'DOUBLE', 'TRIPLE']
 bpatt_dim = [3, 3, 2, 1, 2, 1]
-
-
 
 print(':: preprocess data')
 scaler = StandardScaler()
