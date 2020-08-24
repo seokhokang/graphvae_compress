@@ -73,7 +73,7 @@ for i, smi in enumerate(smisuppl):
         for k in range(j + 1, n_atom):
             bond = mol.GetBondBetweenAtoms(j, k)
             if bond is not None:
-                edge[j, k, :] = np.concatenate([bondFeatures(bond, bond_list), np.zeros(np.sum(bpatt_dim))], 0)
+                edge[j, k, :len(bond_list)] = bondFeatures(bond, bond_list)
                 
             for m in range(len(bpatt_list)):
                 if [m, j, k] in case_list:
