@@ -8,7 +8,7 @@ import sys
 
 
 data_path = './guacamol_graph.pkl'
-save_dict = './'
+save_path = './guacamol_model.ckpt'
 
 print(':: load data')
 with open(data_path,'rb') as f:
@@ -38,5 +38,4 @@ model = Model(n_node, dim_node, dim_edge, dim_y, atom_list, bpatt_dim, mu_prior,
 print(':: train model')
 with model.sess:
     load_path=None
-    save_path=save_dict+'guacamol_model.ckpt'
     model.train(DV, DE, DY, Dsmi, load_path, save_path)
