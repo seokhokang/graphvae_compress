@@ -15,3 +15,16 @@ Tensorflow implementation of the model described in the paper [Compressed Graph 
 - **NumPy**
 - **scikit-learn**
 - **sparse**
+
+## Citation
+```
+@Article{Kwon2020,
+  title={Compressed graph representation for scalable molecular graph generation},
+  author={Kwon, Youngchun and Lee, Dongseon and Choi, Youn-Suk and Shin, Kyoham and Kang, Seokho},
+  journal={Journal of Cheminformatics},
+  volume={12},
+  pages={58},
+  year={2020},
+  doi={10.1186/s13321-020-00463-2}
+}
+```
