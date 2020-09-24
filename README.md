@@ -1,5 +1,5 @@
 # graphvae_compress
-Tensorflow implementation of the model described in the paper [Compressed Graph Representation for Scalable Molecular Graph Generation]()
+Tensorflow implementation of the model described in the paper [Compressed Graph Representation for Scalable Molecular Graph Generation](https://doi.org/10.1186/s13321-020-00463-2)
 
 ## Components
 - **preprocessing.py** - script for data preprocessing
